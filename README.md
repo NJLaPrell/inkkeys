@@ -5,6 +5,17 @@ In contrast to most of my other projects, I decided to put this into its own rep
 
 If you have pull-requests, bug reports or want to contribute new case designs, please do not hesitate to open an issue. For generic discussions, "show and tell" and if you are looking for support for something that is not a problem in the code here, I would recommend [r/thereoughtabe on reddit](https://www.reddit.com/r/thereoughtabe/).
 
+## Mac Install
+Installing on the mac requires several dependencies, some of which are not apparent without a little digging. In order for the AppKit dependency to properly compile, you must be using Python 3.3.* or higher. Note that pulse audio is linux only, so it must be commented/removed from the python code. You will not be able to install the dependency. The following commands should mostly put everything in order to run the controller.py script.
+
+    brew install pkg-config
+    brew install cairo
+    pip3 install pillow
+    pip3 install pyserial
+    pip3 install psutil
+    pip3 install AppKit
+    pip3 install pyobjc
+
 ## Common problems
 
 ### Display revision 2
