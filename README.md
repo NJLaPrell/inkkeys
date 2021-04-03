@@ -19,7 +19,11 @@ Installing on the mac requires several dependencies, some of which are not appar
 ## Common problems
 
 ### Display revision 2
-Apparently, the original design used revision 1 of the display, while many newly ordered version are revision 2. There are a few differences and thankfully, [Corky402 made a good list of required changes on Reddit](https://www.reddit.com/r/arduino/comments/l4wxxf/the_hardware_is_assembled_and_passed_all_tests/gqovq1j?utm_source=share&utm_medium=web2x&context=3). Here is an excerpt of the original post for reference:
+Apparently, the original design used revision 1 of the display, while many newly ordered version are revision 2. There are a few differences and thankfully, [Corky402 made a good list of required changes on Reddit](https://www.reddit.com/r/arduino/comments/l4wxxf/the_hardware_is_assembled_and_passed_all_tests/gqovq1j?utm_source=share&utm_medium=web2x&context=3). 
+
+**NOTE:** This fork already has the changes for revision 2 implemented.
+
+Here is an excerpt of the original post for reference:
 >If you want to test your display hooked to a Arduino or Raspberry Pi you need to run examples for the epd2in9_V2 not the epd2in9.
 >
 >To get this awesome project working there is no need to make any alterations to the PCB, just simply plumb the Waveshare up on the connectors as I describe, not as per Sebastian's original post.
@@ -69,3 +73,10 @@ Apparently, the original design used revision 1 of the display, while many newly
 >const byte PIN_BUSY = 14;
 >
 >The sketch will then compile and when uploaded to the board you will get the Waveshare drawing all sorts of Austin Powers time machine circles that make your eyes spin! 
+
+### Alternate Neopixels ###
+If a different LED is substituted for the PL9823, the usage in the led.ino file and hardware-test.ino file may be different. For the APA106 LED, the NeoPixels are initialized this way:
+
+    Adafruit_NeoPixel leds = Adafruit_NeoPixel(N_LED, PIN_LED, NEO_GRB + NEO_KHZ800);
+
+**NOTE:** This fork already has the changes for APA106 LEDs implemented.
