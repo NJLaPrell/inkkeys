@@ -6,7 +6,7 @@
  */
 
 //LEDs
-Adafruit_NeoPixel leds = Adafruit_NeoPixel(N_LED, PIN_LED, NEO_RGB + NEO_KHZ400);
+Adafruit_NeoPixel leds = Adafruit_NeoPixel(N_LED, PIN_LED, NEO_GRB + NEO_KHZ800);
 
 void initLEDs() {
   leds.begin();
