@@ -1,8 +1,10 @@
 from .protocol import *
 import serial
 import time
+import io
 from threading import Lock
 from PIL import Image, ImageDraw, ImageOps, ImageFont
+from serial import SerialException  #Serial functions
 
 class Device:
     ser = None
@@ -26,7 +28,7 @@ class Device:
     ledState = None         #Current LED status, so we can animate them over time
     ledTime = None          #Last time LEDs were set
 
-    debug = False;
+    debug = True;
 
     def connect(self, dev):
         print("Connecting to ", dev, ".")
@@ -53,7 +55,13 @@ class Device:
     def sendBinaryToDevice(self, data):
         if self.debug:
             print("Sending " + str(len(data)) + " bytes of binary data.")
-        self.ser.write(data)
+            print(data)
+        try:
+            self.ser.write(data)
+            if self.debug:
+                print("Data sent.")
+        except SerialException as e:
+            print("Serial error: ", e)
 
     def readFromDevice(self):
         if self.ser.in_waiting > 0:
@@ -139,31 +147,45 @@ class Device:
             return True
 
     def sendImage(self, x, y, image):
+        if self.debug:
+            print("sendImage()")
         self.imageBuffer.append({"x": x, "y": y, "image": image.copy()})
         w, h = image.size
         data = image.convert("1").rotate(180).tobytes()
+        #buf = io.BytesIO()
+        #image.convert("1").rotate(180).save(buf, format='PNG')
         self.sendToDevice(CommandCode.DISPLAY.value + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h))
+        #self.sendBinaryToDevice(buf.getvalue())
         self.sendBinaryToDevice(data)
         return True
 
     def resendImageData(self):
+        if self.debug:
+            print("resendImageData()")
         for part in self.imageBuffer:
             image = part["image"]
             x = part["x"]
             y = part["y"]
             w, h = image.size
             data = image.convert("1").rotate(180).tobytes()
+            #buf = io.BytesIO()
+            #image.convert("1").rotate(180).save(buf, format='PNG')
             self.sendToDevice(CommandCode.DISPLAY.value + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h))
+            #self.sendBinaryToDevice(buf.getvalue())
             self.sendBinaryToDevice(data)
         self.imageBuffer = []
 
     def updateDisplay(self, fullRefresh=False, timeout=5):
         with self.awaitingResponseLock:
+            if self.debug:
+                print("updateDisplay()")
             start = time.time()
             self.sendToDevice(CommandCode.REFRESH.value + " " + (RefreshTypeCode.FULL.value if fullRefresh else RefreshTypeCode.PARTIAL.value))
             line = self.readFromDevice()
             while line != "ok":
                 if time.time() - start > timeout:
+                    if self.debug:
+                        print("TIMEOUT")
                     return False
                 if line == None:
                     time.sleep(0.1)
@@ -175,6 +197,8 @@ class Device:
             line = self.readFromDevice()
             while line != "ok":
                 if time.time() - start > timeout:
+                    if self.debug:
+                        print("TIMEOUT")
                     return False
                 if line == None:
                     time.sleep(0.1)
@@ -201,6 +225,8 @@ class Device:
         self.sendImage(x, y, image)
 
     def sendTextFor(self, function, text, subtext="", inverted=False):
+        if self.debug:
+            print("sendTextFor()")
         x, y, w, h = self.getAreaFor(function)
         img = Image.new("1", (w, h), color=(0 if inverted else 1))
         d = ImageDraw.Draw(img)
@@ -227,6 +253,8 @@ class Device:
         self.sendImageFor(function, img)
 
     def sendIconFor(self, function, icon, inverted=False, centered=True, marked=False, crossed=False):
+        if self.debug:
+            print("sendIconFor() - " + icon)
         x, y, w, h = self.getAreaFor(function)
         img = Image.new("1", (w, h), color=(0 if inverted else 1))
         imgIcon = Image.open(icon).convert("RGB")
