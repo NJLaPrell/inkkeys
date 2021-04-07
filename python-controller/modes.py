@@ -19,10 +19,6 @@ from math import ceil, floor
 from PIL import Image, ImageDraw, ImageFont
 from colorsys import hsv_to_rgb
 
-#Optional libraries you might want to remove if you do not require them.
-import pulsectl                                  # Get volume level in Linux, pip3 install pulsectl
-from obswebsocket import obsws, requests, events # Control OBS. This requires the websocket plugin in OBS (https://github.com/Palakis/obs-websocket) and the Python library obs-websocket-py (pip3 install obs-websocket-py, https://github.com/Elektordi/obs-websocket-py)
-
 
         ############# Simple example. For Blender we just set up a few key assignments with corresponding images.
         ## Blender ## To be honest: Blender is just the minimalistic example here. Blender is very keyboard centric
@@ -195,12 +191,8 @@ class ModeGimp:
 
 class ModeFallback:
     jogFunction = ""    #Keeps track of the currently selected function of the jog dial
-    mqtt = None         #The MQTT object defined in mqtt.py. It will be passed when this class is contructed and kept in this variable
     lightState = None   #Current state of the lights in my office. (Keeping track to know when to update the screen)
     demoActive = False  #We have a demo button and this keeps track whether the demo mode is active, so we know when to update the screen
-
-    def __init__(self, mqtt):
-        self.mqtt = mqtt
 
     def activate(self, device):
         device.sendTextFor("title", "Default", inverted=True) #Title
@@ -235,20 +227,9 @@ class ModeFallback:
 
 
         ### Button 4 controls the light in my office and displays its state ###
-
-        def toggleLight():
-            target = not self.lightState
-            self.mqtt.setLight(target)
-            self.lightState = target
-            self.showLightState(device)
-
-        self.lightState = self.mqtt.getLight
-        self.showLightState(device, False)
-
         device.assignKey(KeyCode.SW4_PRESS, [])
         device.assignKey(KeyCode.SW4_RELEASE, [])
-        device.registerCallback(toggleLight, KeyCode.SW4_PRESS)
-
+        
 
         ### Button 8 set display and LEDs to a demo state (only used for videos and pictures of the thing)
         def toggleDemo():
@@ -280,16 +261,10 @@ class ModeFallback:
         ### The jog wheel can be pressed to switch between three functions: Volume control, mouse wheel, arrow keys left/right ###
 
         def showVolume(n):
-            with pulsectl.Pulse('inkkeys') as pulse:
-                sinkList = pulse.sink_list()
-                name = pulse.server_info().default_sink_name
-                for sink in sinkList:
-                    if sink.name == name:
-                        vol = sink.volume.value_flat
-                off = 0x00ff00
-                on = 0xff0000
-                leds = [on if vol > i/(device.nLeds-1) else off for i in range(device.nLeds)]
-                device.setLeds(leds)
+            off = 0x00ff00
+            on = 0xff0000
+            leds = [on if True else off for i in range(device.nLeds)]
+            device.setLeds(leds)
 
         self.jogFunction = ""
 
@@ -331,16 +306,7 @@ class ModeFallback:
         device.updateDisplay()
 
     def poll(self, device):
-        if not self.demoActive:
-            co2 = self.mqtt.getCO2()
-            if co2 != None and co2 > 1000:
-                leds = [0x0000ff for i in range(device.nLeds)]
-                device.setLeds(leds)
-            light = self.mqtt.getLight()
-            if light != self.lightState:
-                self.lightState = light
-                self.showLightState(device)
-        return 10 #Since we only retrieve the current state from the Mqtt class, the 10 seconds do not really control how often the value is querries but how often we react to it. For the CO2 warning, this is a not too intrusive blue flash every 10 seconds and a 10 second delay to update the light state if it has been switched from somewhere else (rare) seems reasonable, too.
+        return False    #No polling required
 
     #Called to update the icon of button 4, showing the state of the office light (as if I couldn't see it in the real room, but it is a nice touch to update the display accordingly)
     def showLightState(self, device, update=True):
@@ -353,7 +319,6 @@ class ModeFallback:
 
     def animate(self, device):
         if self.demoActive: #In demo mode, we animate the LEDs here
-
             def rgbTupleToInt(rgb):
                 return (int(rgb[0]*255) << 16) | (int(rgb[1]*255) << 8) | int(rgb[2]*255)
 
@@ -365,161 +330,6 @@ class ModeFallback:
 
     def deactivate(self, device):
         device.clearCallbacks() #Clear our callbacks if we switch to a different mode
-
-
-
-
-
-        ######### One of the most complex examples. This controls OBS scenes and gives feedback about the current state. For this we
-        ## OBS ## use the websocket plugin and address scenes and sources by their names (so, you need to adapt these to your setup).
-        ######### We subscribe to OBS events and show the status on the key and LEDs.
-
-class ModeOBS:
-    ws = None           #Websocket instance
-    currentScene = None #Keep track of current scene
-
-    #Scenes assigned to buttons with respective icons.
-    scenes = [\
-                {"name": "Moderation", "icon": "icons/card-image.png", "button": 2}, \
-                {"name": "Closeup", "icon": "icons/person-square.png", "button": 3}, \
-                {"name": "Slides", "icon": "icons/easel.png", "button": 4}, \
-                {"name": "Video-Mute", "icon": "icons/camera-video-off.png", "button": 5}, \
-             ]
-
-    #State of sources within scenes. "items" is an array of scene/item combinations to keep track of items that need to be switched on multiple scenes simultaneously, so you can mute all mics in all scenes and switch scenes without an unpleasant surprise. The current state is tracked in this object ("current")
-    states = [\
-                {"items": [("Moderation", "Phone"), ("Closeup", "Phone"), ("Slides", "Phone")], "icon": "icons/phone.png", "button": 7, "current": True}, \
-                {"items": [("Slides", "Cam: Closeup")], "icon": "icons/pip.png", "button": 8, "current": True}, \
-                {"items": [("Moderation", "Mic: Moderation"), ("Closeup", "Mic: Closeup"), ("Slides", "Mic: Closeup")], "icon": "icons/mic.png", "button": 9, "current": True}, \
-             ]
-
-    #Switch to scene with name "name"
-    def setScene(self, name):
-        self.ws.call(requests.SetCurrentScene(name))
-
-    #Toggle source visibility as defined in a state (see states above)
-    def toggleState(self, state):
-        visible = not state["current"]
-        for item in state["items"]:
-            self.ws.call(requests.SetSceneItemProperties(item[1], scene_name=item[0], visible=visible))
-
-    #Generates a callback function which in turn calls "setScene" with the fixed scene "name" without requiring a parameter
-    def getSetSceneCallback(self, name):
-        return lambda: self.setScene(name)
-
-    #Generates a callback function which in turn calls "toggleState" with a fixed "state" object without requiting a parameter
-    def getToggleStateCallback(self, state):
-        return lambda: self.toggleState(state)
-
-    #Updates the buttons associated with scenes. Unless "init" is set to true, it only updates changed parts of the display and returns True if anything has changed so that the calling function should call updateDisplay()
-    def updateSceneButtons(self, device, newScene, init=False):
-        if self.currentScene == newScene:
-            return False
-        for scene in self.scenes:
-            if (init and newScene != scene["name"]) or self.currentScene == scene["name"]:
-                device.sendIconFor(scene["button"], scene["icon"], centered=True)
-            elif newScene == scene["name"]:
-                device.sendIconFor(scene["button"], scene["icon"], centered=True, marked=True)
-        self.currentScene = newScene
-        return True
-
-    #Updates the buttons associated with states. Unless "init" is set to true, it only updates changed parts of the display and returns True if anything has changed so that the calling function should call updateDisplay()
-    def updateStateButtons(self, device, scene, item, visible, init=False):
-        anyUpdate = False
-        for state in self.states:
-            if init or ((scene, item) in state["items"] and visible != state["current"]):
-                device.sendIconFor(state["button"], state["icon"], centered=True, crossed=(not (state["current"] if init else visible)))
-                anyUpdate = True
-                if not init:
-                    state["current"] = visible
-        return anyUpdate
-
-    #Change LED colors if the microphones are muted
-    def updateLED(self, device):
-        if self.currentScene == "Video-Mute" or self.states[2]["current"] == False:
-            leds = [0xff0000 for i in range(device.nLeds)] #Either this is the empty "Video-Mute" scene or the mics are muted -> red
-        else:
-            leds = [0x00ff00 for i in range(device.nLeds)] #In any other case the mics are live -> green
-        device.setLeds(leds)
-
-    def activate(self, device):
-        self.ws = obsws("localhost", 4444) #Connect to websockets plugin in OBS
-
-        #Callback if OBS is shutting down
-        def on_exit(message):
-            self.ws.disconnect()
-
-        #Callback if the scene changes
-        def on_scene(message):
-            if self.updateSceneButtons(device, message.getSceneName()):
-                device.updateDisplay() #Only update if parts of the display actually changed
-            self.updateLED(device)
-
-        #Callback if the visibility of a source changes
-        def on_visibility_changed(message):
-            if self.updateStateButtons(device, message.getSceneName(), message.getItemName(), message.getItemVisible()):
-                device.updateDisplay() #Only update if parts of the display actually changed
-            self.updateLED(device)
-
-        #Register callbacks to OBS
-        self.ws.register(on_exit, events.Exiting)
-        self.ws.register(on_scene, events.SwitchScenes)
-        self.ws.register(on_visibility_changed, events.SceneItemVisibilityChanged)
-
-        self.ws.connect()
-
-        device.sendTextFor("title", "OBS", inverted=True) #Title
-
-
-
-        ### Buttons 2 to 5 set different scenes (Moderation, Closeup, Slides and Video Mute) ###
-
-        for scene in self.scenes:
-            device.assignKey(KeyCode["SW"+str(scene["button"])+"_PRESS"], [])
-            device.assignKey(KeyCode["SW"+str(scene["button"])+"_RELEASE"], [])
-            device.registerCallback(self.getSetSceneCallback(scene["name"]), KeyCode["SW"+str(scene["button"])+"_PRESS"])
-
-
-
-        ### Button 6: Order!
-
-        def stopOrder():
-            self.ws.call(requests.SetSceneItemProperties("Order", visible=False))
-
-        def playOrder():
-            self.ws.call(requests.SetSceneItemProperties("Order", visible=True))
-            Timer(3, stopOrder).start()
-
-
-        device.assignKey(KeyCode["SW6_PRESS"], [])
-        device.assignKey(KeyCode["SW6_RELEASE"], [])
-        device.registerCallback(playOrder, KeyCode["SW6_PRESS"])
-        device.sendIconFor(6, "icons/megaphone.png", centered=True)
-
-
-        ### Buttons 7 to 9 toogle the visibility of items, some of which are present in multiple scenes (Mics, Picture-In-Picture cam, Video stream from phone) ###
-
-        for state in self.states:
-            device.assignKey(KeyCode["SW"+str(state["button"])+"_PRESS"], [])
-            device.assignKey(KeyCode["SW"+str(state["button"])+"_RELEASE"], [])
-            device.registerCallback(self.getToggleStateCallback(state), KeyCode["SW"+str(state["button"])+"_PRESS"])
-
-
-
-        ### Get current state and initialize buttons accordingly ###
-        current = self.ws.call(requests.GetSceneList())
-        for scene in current.getScenes():
-            for item in scene["sources"]:
-                for state in self.states:
-                    if (scene["name"], item["name"]) in state["items"]:
-                        state["current"] = item["render"]
-
-        #Call updateSceneButtons and updateStateButtons to initialize their images
-        self.currentScene = None
-        self.updateSceneButtons(device, current.getCurrentScene(), init=True)
-        self.updateStateButtons(device, None, None, True, init=True)
-        device.updateDisplay()
-        self.updateLED(device)
 
     def poll(self, device):
         return False    #No polling required
