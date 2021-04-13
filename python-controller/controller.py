@@ -1,6 +1,6 @@
 SERIALPORT = None #None = Auto-detect, to specify a specific serial port, you can set it to something like "/dev/ttyACM0" (Linux) or "COM1" (Windows)
-VID = 0x2341      #USB Vendor ID for a Pro Micro
-PID = 0x8036    #USB Product ID for a Pro Micro
+VID = 0x1B4F      #USB Vendor ID for a Pro Micro
+PID = 0x9206    #USB Product ID for a Pro Micro
 DEBUG = True     #More output on the command line
 
 from inkkeys import *        #Inkkeys module

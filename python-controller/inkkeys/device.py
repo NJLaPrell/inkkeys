@@ -6,6 +6,8 @@ from threading import Lock
 from PIL import Image, ImageDraw, ImageOps, ImageFont
 from serial import SerialException  #Serial functions
 
+CHUNK_SIZE = 100
+
 class Device:
     ser = None
     inbuffer = ""
@@ -32,7 +34,7 @@ class Device:
 
     def connect(self, dev):
         print("Connecting to ", dev, ".")
-        self.ser = serial.Serial(dev, 115200, timeout=1)
+        self.ser = serial.Serial(dev, 115200, timeout=1, write_timeout=1)
         if not self.requestInfo(3):
             self.disconnect()
             return False
@@ -55,9 +57,17 @@ class Device:
     def sendBinaryToDevice(self, data):
         if self.debug:
             print("Sending " + str(len(data)) + " bytes of binary data.")
-            print(data)
         try:
-            self.ser.write(data)
+            # Send binary data in chunks to prevent killing the serial connection
+            start = time.time()
+            endIx = CHUNK_SIZE
+            startIx = 0
+            while (startIx < len(data)):
+                self.ser.write(data[startIx:endIx])
+                #if self.debug:
+                #    print(data[startIx:endIx].hex())
+                startIx = startIx + CHUNK_SIZE
+                endIx = endIx + CHUNK_SIZE
             if self.debug:
                 print("Data sent.")
         except SerialException as e:
@@ -65,7 +75,7 @@ class Device:
 
     def readFromDevice(self):
         if self.ser.in_waiting > 0:
-            self.inbuffer += self.ser.read(self.ser.in_waiting).decode().replace("\r", "")
+            self.inbuffer += self.ser.read(self.ser.in_waiting).decode("ISO-8859-16").replace("\r", "")
         chunks = self.inbuffer.split("\n", 1)
         if len(chunks) > 1:
             cmd = chunks[0]
@@ -152,10 +162,7 @@ class Device:
         self.imageBuffer.append({"x": x, "y": y, "image": image.copy()})
         w, h = image.size
         data = image.convert("1").rotate(180).tobytes()
-        #buf = io.BytesIO()
-        #image.convert("1").rotate(180).save(buf, format='PNG')
         self.sendToDevice(CommandCode.DISPLAY.value + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h))
-        #self.sendBinaryToDevice(buf.getvalue())
         self.sendBinaryToDevice(data)
         return True
 
@@ -168,10 +175,7 @@ class Device:
             y = part["y"]
             w, h = image.size
             data = image.convert("1").rotate(180).tobytes()
-            #buf = io.BytesIO()
-            #image.convert("1").rotate(180).save(buf, format='PNG')
             self.sendToDevice(CommandCode.DISPLAY.value + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h))
-            #self.sendBinaryToDevice(buf.getvalue())
             self.sendBinaryToDevice(data)
         self.imageBuffer = []
 
@@ -185,20 +189,23 @@ class Device:
             while line != "ok":
                 if time.time() - start > timeout:
                     if self.debug:
-                        print("TIMEOUT")
+                        print("Timed out...")
                     return False
                 if line == None:
                     time.sleep(0.1)
                     line = self.readFromDevice()
                     continue
                 line = self.readFromDevice()
+            time.sleep(2)
             self.resendImageData()
+            time.sleep(2)
             self.sendToDevice(CommandCode.REFRESH.value + " " + RefreshTypeCode.OFF.value)
+            start = time.time()
             line = self.readFromDevice()
             while line != "ok":
                 if time.time() - start > timeout:
                     if self.debug:
-                        print("TIMEOUT")
+                        print("Timed out...")
                     return False
                 if line == None:
                     time.sleep(0.1)

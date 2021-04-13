@@ -242,7 +242,7 @@ class ModeFallback:
                 self.demoActive = True
                 self.activate(device) #Recreate the screen because with demo active, the buttons will align differently to give room for "there.oughta.be"
                 text = "there.oughta.be/a/macro-keyboard"
-                font = ImageFont.truetype("arial.ttf", 17)
+                font = ImageFont.truetype("font/Munro.ttf", 17)
                 w, h = font.getsize(text);
                 x = (device.dispW-h)//2
                 x8 = floor(x / 8) * 8 #needs to be a multiple of 8

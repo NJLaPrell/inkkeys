@@ -18,10 +18,10 @@ Installing on the mac requires several dependencies, some of which are not appar
 
 ## Common problems
 
+**NOTE:** This fork already has the changes below implemented.
+
 ### Display revision 2
 Apparently, the original design used revision 1 of the display, while many newly ordered version are revision 2. There are a few differences and thankfully, [Corky402 made a good list of required changes on Reddit](https://www.reddit.com/r/arduino/comments/l4wxxf/the_hardware_is_assembled_and_passed_all_tests/gqovq1j?utm_source=share&utm_medium=web2x&context=3). 
-
-**NOTE:** This fork already has the changes for revision 2 implemented.
 
 Here is an excerpt of the original post for reference:
 >If you want to test your display hooked to a Arduino or Raspberry Pi you need to run examples for the epd2in9_V2 not the epd2in9.
@@ -79,4 +79,8 @@ If a different LED is substituted for the PL9823, the usage in the led.ino file 
 
     Adafruit_NeoPixel leds = Adafruit_NeoPixel(N_LED, PIN_LED, NEO_GRB + NEO_KHZ800);
 
-**NOTE:** This fork already has the changes for APA106 LEDs implemented.
+### Serial Hang ###
+An instance using a Mac and the YeeKees Pro Micro controller encountered issues where sending binary data resulted in the Pro Micro no longer recieving  serial data (but sill sending). It is unknown at this time if the issue is how pyserial is implimented on Mac or a limitation of the YeeKees Pro Micro controller (two different controllers yielded the same issue). The workaround is to chunk the byte data and send it 100 bytes at a time.
+
+### E-Ink Display Issues ###
+E-ink display renders icons faded in some cases and missing pixels in others. Cause is unknown at this time and may be related to timing. 

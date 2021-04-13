@@ -278,6 +278,12 @@ void processDisplayCommand() {
   unsigned short imageDataTargetHeight = atoi(serialBuffer + i);
   expectingImageData = imageDataTargetWidth*imageDataTargetHeight/8;
   imageDataCurrentY = imageDataTargetY;
+  //Serial.print("E: Ready for image - ");
+  //Serial.print(expectingImageData);
+  //Serial.print(" bytes - ");
+  //Serial.print(imageDataTargetWidth);
+  //Serial.print("x");
+  //Serial.println(imageDataTargetHeight);
 }
 
 void processInfoCommand() {
@@ -316,12 +322,15 @@ void processRefreshCommand() {
   }
   switch (serialBuffer[2]) {
     case 'p':
+      //Serial.println("E: Partial Refresh ");
       display.refresh(true);
       break;
     case 'f':
+      //Serial.println("E: Full Refresh ");
       display.refresh(false);
       break;
     case 'o':
+      //Serial.println("E: Power off. ");
       display.powerOff();
       break;
   }
@@ -329,10 +338,9 @@ void processRefreshCommand() {
 }
 
 //Read from Serial in and react to enter (carriage return)
-void handleSerialInput() {
+void handleSerialInput() { 
   if (Serial.available() > 0) {
     char c = Serial.read();
-
     if (expectingImageData == 0 && c == '\n') {
       //Carriage return. Command ends and needs to be processed
       if (serialBufferCount == serialBufferSize) {
@@ -341,18 +349,23 @@ void handleSerialInput() {
         serialBuffer[serialBufferCount] = 0;
         switch (serialBuffer[0]) {
           case 'A': //Assign buttons
+            //Serial.println("E: processAssignCommand()");
             processAssignCommand();
             break;
           case 'D':
+            //Serial.println("E: processDisplayCommand()");
             processDisplayCommand();
             break;
           case 'I': //Request device info
+            //Serial.println("E: processInfoCommand()");
             processInfoCommand();
             break;
           case 'L': //Set LEDs
+            //Serial.println("E: processLEDCommand()");
             processLEDCommand();
             break;
           case 'R': //Trigger refresh
+            //Serial.println("E: processRefreshCommand()");
             processRefreshCommand();
             break;
           default:  //Inknown command
@@ -371,15 +384,23 @@ void handleSerialInput() {
       if (serialBufferCount < serialBufferSize) {
         serialBuffer[serialBufferCount] = c;
         serialBufferCount++;
-
         if (expectingImageData > 0) {
+          //Serial.print("E: Image Byte ");
+          //Serial.println(c, HEX);
           expectingImageData--;
           if (serialBufferCount * 8 >= imageDataTargetWidth) {
             display.writeImage(serialBuffer, imageDataTargetX, imageDataCurrentY, imageDataTargetWidth, 1, false, false, false);
             serialBufferCount = 0;
             imageDataCurrentY++;
+            if (expectingImageData == 0) {
+              //Serial.println("Image Written");
+            }
+          } else {
+            //Serial.print(" / imageDataTargetWidth: ");
+            //Serial.println(imageDataTargetWidth);
+            //Serial.println("----------------");
           }
-        }
+        } 
       }
     }
   }
