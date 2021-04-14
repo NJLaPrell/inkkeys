@@ -196,9 +196,7 @@ class Device:
                     line = self.readFromDevice()
                     continue
                 line = self.readFromDevice()
-            time.sleep(2)
-            self.resendImageData()
-            time.sleep(2)
+            #self.resendImageData()
             self.sendToDevice(CommandCode.REFRESH.value + " " + RefreshTypeCode.OFF.value)
             start = time.time()
             line = self.readFromDevice()
@@ -257,14 +255,14 @@ class Device:
         d.text(position1, text, font=font1, fill=(1 if inverted else 0))
         if position2 != None and subtext != None:
             d.multiline_text(position2, subtext, font=font2, align=align, spacing=-2, fill=(1 if inverted else 0))
-        self.sendImageFor(function, img)
+        self.sendImageFor(function, img.rotate(270))
 
     def sendIconFor(self, function, icon, inverted=False, centered=True, marked=False, crossed=False):
         if self.debug:
             print("sendIconFor() - " + icon)
         x, y, w, h = self.getAreaFor(function)
         img = Image.new("1", (w, h), color=(0 if inverted else 1))
-        imgIcon = Image.open(icon).convert("RGB")
+        imgIcon = Image.open(icon).convert("RGB").rotate(270)
         if inverted:
             imgIcon = ImageOps.invert(imgIcon)
         wi, hi = imgIcon.size

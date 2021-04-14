@@ -29,7 +29,7 @@ print('I will try to stay connected. Press Ctrl+c to quit.')
 
 modes = [\
             {"mode": ModeBlender(), "activeWindow": re.compile("^Blender")}, \
-            {"mode": ModeGimp(), "activeWindow": re.compile("^GNU.*")}, \
+            {"mode": ModeGimp(), "activeWindow": re.compile("^GIMP.*")}, \
             {"mode": ModeFallback()} \
         ]
 

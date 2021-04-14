@@ -284,6 +284,7 @@ void processDisplayCommand() {
   //Serial.print(imageDataTargetWidth);
   //Serial.print("x");
   //Serial.println(imageDataTargetHeight);
+  //display.fillRect(imageDataTargetX, imageDataTargetY, imageDataTargetWidth, imageDataTargetHeight, GxEPD_WHITE);
 }
 
 void processInfoCommand() {
@@ -301,6 +302,11 @@ void processInfoCommand() {
   Serial.println(DISP_H);
   Serial.print("ROT_CIRCLE_STEPS ");
   Serial.println(ROT_CIRCLE_STEPS);
+  Serial.print("hasPartialUpdate: ");
+  Serial.println(display.hasPartialUpdate);
+  Serial.print("hasFastPartialUpdate: ");
+  Serial.println(display.hasFastPartialUpdate);
+  
   Serial.println("Done");
 }
 
@@ -323,7 +329,12 @@ void processRefreshCommand() {
   switch (serialBuffer[2]) {
     case 'p':
       //Serial.println("E: Partial Refresh ");
+      //display.clearScreen();
+      //delay(2000);
+      //display.writeScreenBuffer();
       display.refresh(true);
+      //display.writeScreenBufferAgain();
+      //display.refresh(0, 0, 128, 296);
       break;
     case 'f':
       //Serial.println("E: Full Refresh ");
@@ -390,6 +401,7 @@ void handleSerialInput() {
           expectingImageData--;
           if (serialBufferCount * 8 >= imageDataTargetWidth) {
             display.writeImage(serialBuffer, imageDataTargetX, imageDataCurrentY, imageDataTargetWidth, 1, false, false, false);
+            display.writeImageAgain(serialBuffer, imageDataTargetX, imageDataCurrentY, imageDataTargetWidth, 1, false, false, false);
             serialBufferCount = 0;
             imageDataCurrentY++;
             if (expectingImageData == 0) {

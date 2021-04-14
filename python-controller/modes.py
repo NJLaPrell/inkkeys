@@ -144,33 +144,13 @@ class ModeGimp:
         device.assignKey(KeyCode.SW9_RELEASE, [])
 
 
-        self.jogFunction = ""
 
-        #This toggles the jog function and sets up key assignments and the label for the jog dial. It calls "updateDiplay()" if update is not explicitly set to False (for example if you need to update more parts of the display before updating it.)
-        def toggleJogFunction(update=True):
-            if self.jogFunction == "size":  #Tool opacity in GIMP
-                device.clearCallback(KeyCode.JOG)
-                device.sendTextFor(1, "Tool opacity")
-                device.assignKey(KeyCode.JOG_CW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_COMMA), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT, ActionCode.RELEASE)])
-                device.assignKey(KeyCode.JOG_CCW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_PERIOD), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT, ActionCode.RELEASE)])
-                self.jogFunction = "opacity"
-                if update:
-                    device.updateDisplay()
-            else:                            #Tool size in GIMP
-                device.clearCallback(KeyCode.JOG)
-                device.sendTextFor(1, "Tool size")
-                device.assignKey(KeyCode.JOG_CW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_BRACE)])
-                device.assignKey(KeyCode.JOG_CCW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_RIGHT_BRACE)])
-                self.jogFunction = "size"
-                if update:
-                    device.updateDisplay()
 
 
         #Button 1 / jog dial press
-        device.registerCallback(toggleJogFunction, KeyCode.JOG_PRESS) #Call "toggleJogFunction" if the dial is pressed
-        device.assignKey(KeyCode.SW1_PRESS, [])                       #We do not send a key stroke when the dial is pressed, instead we use the callback.
-        device.assignKey(KeyCode.SW1_RELEASE, [])                     #We still need to overwrite the assignment to clear previously set assignments.
-        toggleJogFunction(False)    #We call toggleJogFunction to initially set the label and assignment
+        device.assignKey(KeyCode.SW1_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW1_RELEASE, [])
+        
         device.updateDisplay()      #Everything has been sent to the display. Time to refresh it.
 
     def poll(self, device):
@@ -190,7 +170,6 @@ class ModeGimp:
         ############## data from a CO2 sensor and control a light (both including feedback)
 
 class ModeFallback:
-    jogFunction = ""    #Keeps track of the currently selected function of the jog dial
     lightState = None   #Current state of the lights in my office. (Keeping track to know when to update the screen)
     demoActive = False  #We have a demo button and this keeps track whether the demo mode is active, so we know when to update the screen
 
@@ -199,12 +178,19 @@ class ModeFallback:
 
         ### Buttons 2, 3, 6 and 7 are media controls ###
 
-        device.sendIconFor(2, "icons/play.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW2_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_PLAY_PAUSE, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW2_RELEASE, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_PLAY_PAUSE, ActionCode.RELEASE)])
-        device.sendIconFor(3, "icons/skip-start.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW3_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_PREV, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW3_RELEASE, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_PREV, ActionCode.RELEASE)])
+        device.sendIconFor(2, "icons/app-docker.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW2_PRESS, [(event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_1, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW2_RELEASE, [event(event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_1, ActionCode.RELEASE)])
+        device.sendIconFor(3, "icons/app-dash.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW3_PRESS, [(event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_2, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW3_RELEASE, [event(event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_2, ActionCode.RELEASE)])
+        ### Button 4 controls the light in my office and displays its state ###
+        device.sendIconFor(4, "icons/app-snippets.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW4_PRESS, [(event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_3, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW4_RELEASE, [event(event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_3, ActionCode.RELEASE)])
+        device.sendIconFor(5, "icons/app-bitwarden.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW5_PRESS, [(event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_4, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW5_RELEASE, [event(event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_4, ActionCode.RELEASE)])
 
         device.sendIconFor(6, "icons/stop.png", centered=(not self.demoActive))
         device.assignKey(KeyCode.SW6_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_STOP, ActionCode.PRESS)])
@@ -217,9 +203,7 @@ class ModeFallback:
 
         ### Buttons 5 and 9 are shortcuts to applications ###
 
-        device.sendIconFor(5, "icons/envelope.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW5_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.CONSUMER_EMAIL_READER, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW5_RELEASE, [event(DeviceCode.CONSUMER, ConsumerKeycode.CONSUMER_EMAIL_READER, ActionCode.RELEASE)])
+        
         device.sendIconFor(9, "icons/calculator.png", centered=(not self.demoActive))
         device.assignKey(KeyCode.SW9_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.CONSUMER_CALCULATOR, ActionCode.PRESS)])
         device.assignKey(KeyCode.SW9_RELEASE, [event(DeviceCode.CONSUMER, ConsumerKeycode.CONSUMER_CALCULATOR, ActionCode.RELEASE)])
@@ -266,39 +250,13 @@ class ModeFallback:
             leds = [on if True else off for i in range(device.nLeds)]
             device.setLeds(leds)
 
-        self.jogFunction = ""
-
-        def toggleJogFunction(update=True):
-            if self.jogFunction == "wheel":
-                device.clearCallback(KeyCode.JOG)
-                device.sendTextFor(1, "Arrow Keys")
-                device.assignKey(KeyCode.JOG_CW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_RIGHT)])
-                device.assignKey(KeyCode.JOG_CCW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT)])
-                self.jogFunction = "arrow"
-                if update:
-                    device.updateDisplay()
-            elif self.jogFunction == "arrow":
-                device.sendTextFor(1, "Volume")
-                device.registerCallback(showVolume, KeyCode.JOG)
-                device.assignKey(KeyCode.JOG_CW, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_VOL_UP)])
-                device.assignKey(KeyCode.JOG_CCW, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_VOL_DOWN)])
-                self.jogFunction = "volume"
-                if update:
-                    device.updateDisplay()
-            else:
-                device.clearCallback(KeyCode.JOG)
-                device.sendTextFor(1, "Mouse Wheel")
-                device.assignKey(KeyCode.JOG_CW, [event(DeviceCode.MOUSE, MouseAxisCode.MOUSE_WHEEL, 1)])
-                device.assignKey(KeyCode.JOG_CCW, [event(DeviceCode.MOUSE, MouseAxisCode.MOUSE_WHEEL, -1)])
-                self.jogFunction = "wheel"
-                if update:
-                    device.updateDisplay()
-
-        device.registerCallback(toggleJogFunction, KeyCode.JOG_PRESS)
-        device.assignKey(KeyCode.SW1_PRESS, [])
-        device.assignKey(KeyCode.SW1_RELEASE, [])
-        toggleJogFunction(False)
-
+        #Button 1 / jog dial press
+        device.assignKey(KeyCode.SW1_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW1_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.RELEASE)])
+        
+        #Jog dial rotation
+        device.assignKey(KeyCode.JOG_CW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_RIGHT)]) #CW = Clock-wise, one frame forward
+        device.assignKey(KeyCode.JOG_CCW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT)]) #CCW = Counter clock-wise, one frame back
 
 
         ### All set, let's update the display ###
