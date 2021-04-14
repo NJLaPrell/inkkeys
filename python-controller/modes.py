@@ -208,11 +208,6 @@ class ModeFallback:
         device.assignKey(KeyCode.SW9_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.CONSUMER_CALCULATOR, ActionCode.PRESS)])
         device.assignKey(KeyCode.SW9_RELEASE, [event(DeviceCode.CONSUMER, ConsumerKeycode.CONSUMER_CALCULATOR, ActionCode.RELEASE)])
 
-
-
-        ### Button 4 controls the light in my office and displays its state ###
-        device.assignKey(KeyCode.SW4_PRESS, [])
-        device.assignKey(KeyCode.SW4_RELEASE, [])
         
 
         ### Button 8 set display and LEDs to a demo state (only used for videos and pictures of the thing)
