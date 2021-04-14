@@ -174,88 +174,57 @@ class ModeFallback:
     demoActive = False  #We have a demo button and this keeps track whether the demo mode is active, so we know when to update the screen
 
     def activate(self, device):
-        device.sendTextFor("title", "Default", inverted=True) #Title
+        #device.sendTextFor("title", "Default", inverted=True) #Title
 
-        ### Buttons 2, 3, 6 and 7 are media controls ###
-
-        device.sendIconFor(2, "icons/app-docker.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW2_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_1, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW2_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_1, ActionCode.RELEASE)])
-        device.sendIconFor(3, "icons/app-dash.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW3_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_2, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW3_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_2, ActionCode.RELEASE)])
-        ### Button 4 controls the light in my office and displays its state ###
-        device.sendIconFor(4, "icons/app-snippets.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW4_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_3, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW4_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_3, ActionCode.RELEASE)])
-        device.sendIconFor(5, "icons/app-bitwarden.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW5_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_4, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW5_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_4, ActionCode.RELEASE)])
-
-        device.sendIconFor(6, "icons/stop.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW6_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_STOP, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW6_RELEASE, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_STOP, ActionCode.RELEASE)])
-        device.sendIconFor(7, "icons/skip-end.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW7_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_NEXT, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW7_RELEASE, [event(DeviceCode.CONSUMER, ConsumerKeycode.MEDIA_NEXT, ActionCode.RELEASE)])
-
-
-
-        ### Buttons 5 and 9 are shortcuts to applications ###
-
-        
-        device.sendIconFor(9, "icons/calculator.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW9_PRESS, [event(DeviceCode.CONSUMER, ConsumerKeycode.CONSUMER_CALCULATOR, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW9_RELEASE, [event(DeviceCode.CONSUMER, ConsumerKeycode.CONSUMER_CALCULATOR, ActionCode.RELEASE)])
-
-        
-
-        ### Button 8 set display and LEDs to a demo state (only used for videos and pictures of the thing)
-        def toggleDemo():
-            if self.demoActive:
-                self.demoActive = False
-                img = Image.new("1", (device.dispW, device.dispH), color=1)
-                device.sendImage(0, 0, img)
-                self.activate(device) #Recreate the screen content after the demo
-            else:
-                self.demoActive = True
-                self.activate(device) #Recreate the screen because with demo active, the buttons will align differently to give room for "there.oughta.be"
-                text = "there.oughta.be/a/macro-keyboard"
-                font = ImageFont.truetype("font/Munro.ttf", 17)
-                w, h = font.getsize(text);
-                x = (device.dispW-h)//2
-                x8 = floor(x / 8) * 8 #needs to be a multiple of 8
-                h8 = ceil((h + x - x8) / 8) * 8 #needs to be a multiple of 8
-                img = Image.new("1", (w, h8), color=1)
-                d = ImageDraw.Draw(img)
-                d.text((0, x-x8), text, font=font, fill=0)
-                device.sendImage(x8, (device.dispH-w)//2, img.transpose(Image.ROTATE_90))
-                device.updateDisplay(True)
-
-        device.registerCallback(toggleDemo, KeyCode.SW8_PRESS)
-        device.sendIconFor(8, "icons/emoji-sunglasses.png", centered=(not self.demoActive))
-        device.assignKey(KeyCode.SW8_PRESS, [])
-        device.assignKey(KeyCode.SW8_RELEASE, [])
-
-        ### The jog wheel can be pressed to switch between three functions: Volume control, mouse wheel, arrow keys left/right ###
-
-        def showVolume(n):
-            off = 0x00ff00
-            on = 0xff0000
-            leds = [on if True else off for i in range(device.nLeds)]
-            device.setLeds(leds)
-
-        #Button 1 / jog dial press
-        device.assignKey(KeyCode.SW1_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.PRESS)])
-        device.assignKey(KeyCode.SW1_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.RELEASE)])
-        
         #Jog dial rotation
         device.assignKey(KeyCode.JOG_CW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_RIGHT)]) #CW = Clock-wise, one frame forward
         device.assignKey(KeyCode.JOG_CCW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT)]) #CCW = Counter clock-wise, one frame back
 
+        #Button 1 / jog dial press
+        device.assignKey(KeyCode.SW1_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW1_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.RELEASE)])
+
+        ### Button 2 ###
+        device.sendIconFor(2, "icons/app-docker.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW2_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_1, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW2_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_1, ActionCode.RELEASE)])
+        
+        ### Button 3 ###
+        device.sendIconFor(3, "icons/app-dash.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW3_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_2, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW3_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_2, ActionCode.RELEASE)])
+        
+        ### Button 4 ###
+        device.sendIconFor(4, "icons/app-snippets.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW4_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_3, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW4_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_3, ActionCode.RELEASE)])
+        
+        ### Button 5 ###
+        device.sendIconFor(5, "icons/app-bitwarden.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW5_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_4, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW5_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_4, ActionCode.RELEASE)])
+
+        ### Button 6 ###
+        device.sendIconFor(6, "icons/app-slack.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW6_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_5, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW6_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_5, ActionCode.RELEASE)])
+
+        ### Button 7 ###
+        device.sendIconFor(7, "icons/app-chrome.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW7_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_6, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW7_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_6, ActionCode.RELEASE)])
+
+        ### Button 8 ###
+        device.sendIconFor(8, "icons/app-outlook.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW8_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_7, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW8_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_7, ActionCode.RELEASE)])
+
+        ### Button 9 ###
+        device.sendIconFor(9, "icons/app-vscode.png", centered=(not self.demoActive))
+        device.assignKey(KeyCode.SW9_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_8, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW9_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_8, ActionCode.RELEASE)])
 
         ### All set, let's update the display ###
-
         device.updateDisplay()
 
     def poll(self, device):
