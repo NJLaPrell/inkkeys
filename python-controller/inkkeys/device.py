@@ -21,7 +21,7 @@ class Device:
     rotFactor = 0
     rotCircleSteps = 0
 
-    bannerHeight = 12 #Defines the height of top and bottom banner
+    bannerHeight = 20 #Defines the height of top and bottom banner
 
     imageBuffer = []
 
@@ -156,9 +156,10 @@ class Device:
             print("Rotation circle steps: ", self.rotCircleSteps)
             return True
 
+    # Send the image to the controller
     def sendImage(self, x, y, image):
         if self.debug:
-            print("sendImage()")
+            print(f"sendImage({x}, {y})")
         self.imageBuffer.append({"x": x, "y": y, "image": image.copy()})
         w, h = image.size
         data = image.convert("1").rotate(180).tobytes()
@@ -166,6 +167,7 @@ class Device:
         self.sendBinaryToDevice(data)
         return True
 
+    # Resends all of the images from the buffer to the controller so they can be buffered in the display.
     def resendImageData(self):
         if self.debug:
             print("resendImageData()")
@@ -179,10 +181,12 @@ class Device:
             self.sendBinaryToDevice(data)
         self.imageBuffer = []
 
+    # Render the images on the display
     def updateDisplay(self, fullRefresh=False, timeout=5):
         with self.awaitingResponseLock:
             if self.debug:
-                print("updateDisplay()")
+                print(f"updateDisplay(fullRefresh={fullRefresh}, timeout={timeout})")
+            # Send the refresh command and wait for "ok" response until the timeout is up.
             start = time.time()
             self.sendToDevice(CommandCode.REFRESH.value + " " + (RefreshTypeCode.FULL.value if fullRefresh else RefreshTypeCode.PARTIAL.value))
             line = self.readFromDevice()
@@ -196,7 +200,8 @@ class Device:
                     line = self.readFromDevice()
                     continue
                 line = self.readFromDevice()
-            #self.resendImageData()
+            # Resend all of the image data from the buffer to buffer in the display
+            self.resendImageData()
             self.sendToDevice(CommandCode.REFRESH.value + " " + RefreshTypeCode.OFF.value)
             start = time.time()
             line = self.readFromDevice()
@@ -211,16 +216,29 @@ class Device:
                     continue
                 line = self.readFromDevice()
 
+    # Get the area for the image that is being sent.
     def getAreaFor(self, function):
+        bannerSpace = self.bannerHeight//2 #Each side gives space for half the banner height
+        tileH = self.dispH//4 #Tile height is the screen height divided by 4
+        tileW = (self.dispW//2)-bannerSpace #Tile width is half the screen minus half the banner height 
+                
         if function == "title":
-            return (0, self.dispH-self.bannerHeight, self.dispW, self.bannerHeight)
+            # TODO: The controler hangs and fails to upddate the display when the title is less than 40 in height
+            area = (tileW, 0, 40, self.dispH)
         elif function == 1:
-            return (0, 0, self.dispW, self.bannerHeight)
+            # TODO: Decide what to do with button 1 text, if anything.
+            area = (0, tileW, self.dispH, self.dispW//2+self.bannerHeight)
         elif function <= 5:
-            return (self.dispW//2, (5-function)*self.dispH//4+self.bannerHeight, self.dispW//2, self.dispH//4-2*self.bannerHeight)
+            area = (tileW+(self.bannerHeight), (5-function)*tileH, tileW+2, tileH)
         else:
-            return (0, (9-function)*self.dispH//4+self.bannerHeight, self.dispW//2, self.dispH//4-2*self.bannerHeight)
+            area = (0, (9-function)*tileH, tileW+2, tileH)
+        
+        if self.debug:
+            x, y, w, h = area
+            print(f"Area is {x}/{y} {w}x{h}")
+        return area
 
+    # Resize the image if needed and send it to the controller.
     def sendImageFor(self, function, image):
         x, y, w, h = self.getAreaFor(function)
         if (w, h) != image.size:
@@ -229,61 +247,48 @@ class Device:
             image = image.resize((w, h))
         self.sendImage(x, y, image)
 
+    # Generate an image with text
+    # TODO: Re-impliment text in place of icons. Currently only supports title
     def sendTextFor(self, function, text, subtext="", inverted=False):
         if self.debug:
-            print("sendTextFor()")
+            print(f"sendTextFor({function}, {text}, subtext={subtext}, inverted={inverted})")
         x, y, w, h = self.getAreaFor(function)
-        img = Image.new("1", (w, h), color=(0 if inverted else 1))
-        d = ImageDraw.Draw(img)
-        font1 = ImageFont.truetype("font/Munro.ttf", 10)
-        wt1, ht1 = font1.getsize(text);
-        font2 = ImageFont.truetype("font/MunroSmall.ttf", 10)
-        wt2, ht2 = font2.getsize_multiline(subtext);
-        if function == 1 or function == "title":
-            position1 = ((w-wt1)/2,(h-ht1-(0.5 if function == "title" else 0))/2) #Center jog wheel and title label (the title get's small -0.5 nudge for rounding to prefer a top alignment)
-            position2 = None
-        elif function < 6:
-            d.line([(0, h/2), (wt1, h/2)], fill=(1 if inverted else 0))
-            position1 = (0,h/2-ht1-2) #Align left
-            position2 = (0,h/2-1)
-            align="left"
-        else:
-            d.line([(w, h/2), (w-wt1, h/2)], fill=(1 if inverted else 0))
-            position1 = (w-wt1,h/2-ht1-2) #Align right
-            position2 = (w-wt2,h/2-1)
-            align="right"
-        d.text(position1, text, font=font1, fill=(1 if inverted else 0))
-        if position2 != None and subtext != None:
-            d.multiline_text(position2, subtext, font=font2, align=align, spacing=-2, fill=(1 if inverted else 0))
-        self.sendImageFor(function, img.rotate(270))
+        font = ImageFont.truetype("font/Munro.ttf", 10)
+        fW, fH = font.getsize(text);
+        img = Image.new("1", (h, w), color=(0 if inverted else 1))
+        ImageDraw.Draw(img).text((h//2,(w-fH)//2), text, anchor="mt", font=font, fill=(1 if inverted else 0)) #Center the text on image
+        self.sendImageFor(function, img.rotate(270, expand=1))
 
+    # Generate and send the icon to the controller
+    # TODO: Re-impliment marked/crossed overlays
     def sendIconFor(self, function, icon, inverted=False, centered=True, marked=False, crossed=False):
         if self.debug:
-            print("sendIconFor() - " + icon)
+            print(f"sendIconFor({icon}, inverted={inverted}, centered={centered}, marked={marked}, crossed={crossed})")
         x, y, w, h = self.getAreaFor(function)
         img = Image.new("1", (w, h), color=(0 if inverted else 1))
-        imgIcon = Image.open(icon).convert("RGB").rotate(270)
+        imgIcon = Image.open(icon).convert("RGB").rotate(270, expand=True)
         if inverted:
             imgIcon = ImageOps.invert(imgIcon)
         wi, hi = imgIcon.size
         if function < 6:
-            pos = ((w-wi)//2 if centered else 0, (h - hi)//2)
+            pos = (0, (h - wi)//2)
         else:
-            pos = ((w-wi)//2 if centered else (w - wi), (h - hi)//2)
+            pos = ((w - hi), (h - wi)//2)
         img.paste(imgIcon, pos)
 
-        if marked:
-            imgMarker = Image.open("icons/chevron-compact-right.png" if function < 6 else "icons/chevron-compact-left.png")
-            wm, hm = imgMarker.size
-            img.paste(imgMarker, (-16,(h - hm)//2) if function < 6 else (w-wm+16,(h - hm)//2), mask=ImageOps.invert(imgMarker.convert("RGB")).convert("1"))
+        #if marked:
+        #    imgMarker = Image.open("icons/chevron-compact-right.png" if function < 6 else "icons/chevron-compact-left.png")
+        #    wm, hm = imgMarker.size
+        #    img.paste(imgMarker, (-16,(h - hm)//2) if function < 6 else (w-wm+16,(h - hm)//2), mask=ImageOps.invert(imgMarker.convert("RGB")).convert("1"))
 
-        if crossed:
-            d = ImageDraw.Draw(img)
-            d.line([pos[0]+5, pos[1]+5, pos[0]+wi-5, pos[1]+hi-5], width=3)
-            d.line([pos[0]+5, pos[1]+hi-5, pos[0]+wi-5, pos[1]+5], width=3)
+        #if crossed:
+        #    d = ImageDraw.Draw(img)
+        #    d.line([pos[0]+5, pos[1]+5, pos[0]+wi-5, pos[1]+hi-5], width=3)
+        #    d.line([pos[0]+5, pos[1]+hi-5, pos[0]+wi-5, pos[1]+5], width=3)
 
         self.sendImage(x, y, img)
 
+    # Set LEDs to a color.
     def setLeds(self, leds):
         ledStr = ['{:06x}'.format(i) for i in leds]
         self.ledTime = time.time()

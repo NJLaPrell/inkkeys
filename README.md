@@ -84,3 +84,15 @@ An instance using a Mac and the YeeKees Pro Micro controller encountered issues 
 
 ### E-Ink Display Issues ###
 E-ink display renders icons faded in some cases and missing pixels in others. Cause is unknown at this time and may be related to timing. 
+
+## Fork Notes ##
+This fork uses a KeeYees brand Pro Micro controller and APA106 LEDs which are different from the original specs. The python code is also run on a Mac and has been updated to rotate the display 90 degrees so that the device can be rotated on it's side. This is a work in progress.
+
+### Known Issues ###
+ - The text for the title must have a minimum height of 40 or the controller goes unresponsive and responds with unknown characters when the display is refreshed.
+ - Resending images often times out and has the effect of fading the current display when the display is shut down.
+
+ ### TODO ###
+ - Re-impliment the icon overlays.
+ - Re-impliment the ability to use text instead of icons.
+ - Add the ability to place text above/below the icons.
