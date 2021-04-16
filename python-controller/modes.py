@@ -263,3 +263,75 @@ class ModeFallback:
     def deactivate(self, device):
         device.clearCallbacks() #Clear our callbacks if we switch to a different mode
 
+class ModeMiniFallback:
+
+    def activate(self, device):
+        device.sendTextFor("title", "Mac-Mini") #Title
+
+        #Jog dial rotation
+        device.assignKey(KeyCode.JOG_CW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_RIGHT)]) #CW = Clock-wise, one frame forward
+        device.assignKey(KeyCode.JOG_CCW, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_SHIFT), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT)]) #CCW = Counter clock-wise, one frame back
+
+        #Button 1 / jog dial press
+        device.assignKey(KeyCode.SW1_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW1_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F15, ActionCode.RELEASE)])
+
+        ### Button 2 ###
+        device.sendIconFor(2, "icons/app-brave.png", centered=False)
+        device.assignKey(KeyCode.SW2_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F1, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW2_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F1, ActionCode.RELEASE)])
+        #device.sendTextFor(2, "Docker", inverted=False) #Title
+        
+        ### Button 3 ###
+        device.sendIconFor(3, "icons/app-email.png", centered=False)
+        device.assignKey(KeyCode.SW3_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F2, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW3_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F2, ActionCode.RELEASE)])
+        
+        ### Button 4 ###
+        device.sendIconFor(4, "icons/app-messenger.png", centered=False)
+        device.assignKey(KeyCode.SW4_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F3, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW4_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F3, ActionCode.RELEASE)])
+        
+        ### Button 5 ###
+        device.sendIconFor(5, "icons/app-bitwarden.png", centered=False)
+        device.assignKey(KeyCode.SW5_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_4, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW5_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_4, ActionCode.RELEASE)])
+
+        ### Button 6 ###
+        device.sendIconFor(6, "icons/app-pages.png", centered=False)
+        device.assignKey(KeyCode.SW6_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F5, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW6_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F5, ActionCode.RELEASE)])
+
+        ### Button 7 ###
+        device.sendIconFor(7, "icons/app-keynote.png", centered=False)
+        device.assignKey(KeyCode.SW7_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F6, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW7_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F6, ActionCode.RELEASE)])
+
+        ### Button 8 ###
+        device.sendIconFor(8, "icons/app-dash.png", centered=False)
+        device.assignKey(KeyCode.SW8_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F7, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW8_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_F7, ActionCode.RELEASE)])
+
+        ### Button 9 ###
+        device.sendIconFor(9, "icons/app-vscode.png", centered=False)
+        device.assignKey(KeyCode.SW9_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_8, ActionCode.PRESS)])
+        device.assignKey(KeyCode.SW9_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_8, ActionCode.RELEASE)])
+        ### All set, let's update the display ###
+
+        device.updateDisplay()
+
+    def poll(self, device):
+        return False    #No polling required
+
+    def deactivate(self, device):
+        device.clearCallbacks() #Clear our callbacks if we switch to a different mode
+
+    def poll(self, device):
+        return False    #No polling required
+
+    def animate(self, device):
+        pass    #In this mode we want permanent LED illumination. Do not fade or animate otherwise.
+
+    def deactivate(self, device):
+        device.clearCallbacks() #Clear our callbacks if we switch to a different mode
+
