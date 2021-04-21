@@ -12,7 +12,7 @@ from serial import SerialException  #Serial functions
 import serial.tools.list_ports      #Function to iterate over serial ports
 import re                           #Regular expressions process name matching
 import traceback                    #Print tracebacks if an error is thrown and caught
-import socket           #Get the hostname of the computer
+import socket                       #Get the hostname of the computer
 
 print("https://there.oughta.be/a/macro-keyboard")
 print('I will try to stay connected. Press Ctrl+c to quit.')
@@ -31,7 +31,7 @@ print('I will try to stay connected. Press Ctrl+c to quit.')
 modes = [\
             {"mode": ModeBlender(), "activeWindow": re.compile("^Blender")}, \
             {"mode": ModeGimp(), "activeWindow": re.compile("^GIMP.*")}, \
-            {"mode": ModeMiniFallback(), "hostname":"Mac-Mini"}, \
+            {"mode": ModeMiniFallback(), "hostname":"Mac-Mini.local"}, \
             {"mode": ModeFallback()} \
         ]
 
@@ -69,7 +69,7 @@ def work():
                         print("Active window: " + str(activeWindow))
 
                 for i in modes:                 #Iterate over modes and use the first one that matches
-                    if ("process" in i and i["process"] in processes) or ("hostname" in i and i["hostname"] == hostname) or ("activeWindow" in i and i["activeWindow"].match(activeWindow)) or not ("process" in i or "activeWindow" in i):
+                    if ("process" in i and i["process"] in processes) or ("hostname" in i and i["hostname"] == hostname) or ("activeWindow" in i and i["activeWindow"].match(activeWindow)) or not ("process" in i or "activeWindow" in i or "hostname" in i):
                         #Either the process for this mode is running or the active window matches the regular expression. This is the mode we will set now.
                         if i["mode"] != mode:           # Do not set the mode again if we already have this one
                             if mode != None:            

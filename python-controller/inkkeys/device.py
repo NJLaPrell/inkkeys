@@ -186,7 +186,7 @@ class Device:
         self.sendToDevice('R r')
 
     # Render the images on the display
-    def updateDisplay(self, fullRefresh=False, timeout=5):
+    def updateDisplay(self, fullRefresh=False, timeout=5, bufferData=False):
         with self.awaitingResponseLock:
             if self.debug:
                 print(f"updateDisplay(fullRefresh={fullRefresh}, timeout={timeout})")
@@ -205,20 +205,21 @@ class Device:
                     continue
                 line = self.readFromDevice()
             # Resend all of the image data from the buffer to buffer in the display
-            self.resendImageData()
-            self.sendToDevice(CommandCode.REFRESH.value + " " + RefreshTypeCode.OFF.value)
-            start = time.time()
-            line = self.readFromDevice()
-            while line != "ok":
-                if time.time() - start > timeout:
-                    if self.debug:
-                        print("Timed out...")
-                    return False
-                if line == None:
-                    time.sleep(0.1)
-                    line = self.readFromDevice()
-                    continue
+            if bufferData:
+                self.resendImageData()
+                self.sendToDevice(CommandCode.REFRESH.value + " " + RefreshTypeCode.OFF.value)
+                start = time.time()
                 line = self.readFromDevice()
+                while line != "ok":
+                    if time.time() - start > timeout:
+                        if self.debug:
+                            print("Timed out...")
+                        return False
+                    if line == None:
+                        time.sleep(0.1)
+                        line = self.readFromDevice()
+                        continue
+                    line = self.readFromDevice()
 
     # Get the area for the image that is being sent.
     def getAreaFor(self, function):

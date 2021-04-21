@@ -342,9 +342,9 @@ void processRefreshCommand() {
       break;
     case 'r':
       display.clearScreen();
-      display.writeScreenBuffer();
-      display.refresh();
-      display.writeScreenBufferAgain();
+      //display.writeScreenBuffer();
+      //display.refresh();
+      //display.writeScreenBufferAgain();
     case 'o':
       //Serial.println("E: Power off. ");
       display.powerOff();
