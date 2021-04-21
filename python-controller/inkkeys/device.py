@@ -34,7 +34,7 @@ class Device:
 
     def connect(self, dev):
         print("Connecting to ", dev, ".")
-        self.ser = serial.Serial(dev, 115200, timeout=1, write_timeout=1)
+        self.ser = serial.Serial(dev, 115200, timeout=1, write_timeout=5)
         if not self.requestInfo(3):
             self.disconnect()
             return False
@@ -180,6 +180,10 @@ class Device:
             self.sendToDevice(CommandCode.DISPLAY.value + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h))
             self.sendBinaryToDevice(data)
         self.imageBuffer = []
+
+    # Blanks out the display
+    def resetDisplay(self):
+        self.sendToDevice('R r')
 
     # Render the images on the display
     def updateDisplay(self, fullRefresh=False, timeout=5):

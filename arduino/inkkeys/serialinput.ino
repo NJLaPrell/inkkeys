@@ -322,7 +322,7 @@ void processLEDCommand() {
 }
 
 void processRefreshCommand() {
-  if (serialBufferCount != 3 || serialBuffer[1] != ' ' || (serialBuffer[2] != 'p' && serialBuffer[2] != 'f' && serialBuffer[2] != 'o')) {
+  if (serialBufferCount != 3 || serialBuffer[1] != ' ' || (serialBuffer[2] != 'p' && serialBuffer[2] != 'f' && serialBuffer[2] != 'o' && serialBuffer[2] != 'r')) {
     Serial.println("E: Bad format.");
     return;
   }
@@ -340,6 +340,11 @@ void processRefreshCommand() {
       //Serial.println("E: Full Refresh ");
       display.refresh(false);
       break;
+    case 'r':
+      display.clearScreen();
+      display.writeScreenBuffer();
+      display.refresh();
+      display.writeScreenBufferAgain();
     case 'o':
       //Serial.println("E: Power off. ");
       display.powerOff();

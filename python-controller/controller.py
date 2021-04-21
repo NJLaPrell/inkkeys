@@ -108,6 +108,7 @@ def tryUsingPort(port):
     try:
         if device.connect(port):
             print(f"Connected to controller on {socket.gethostname()}")
+            device.resetDisplay()
             work()  #Success, enter main loop
             device.disconnect()
             return True
