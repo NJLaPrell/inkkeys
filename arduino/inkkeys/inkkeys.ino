@@ -69,11 +69,13 @@ void setup() {
   SingleConsumer.begin();
 
   //Show LED greeting to confirm completion
-  ledGreeting(800);
+  //ledGreeting(800);
+  animateLeds(1, 800);
   Serial.println("Ready.");
 }
 
 void loop() {
+  processAnimation();
   checkKeysAndReportChanges();
   checkRotaryEncoderAndReportChanges();
   handleSerialInput();
