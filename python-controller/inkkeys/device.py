@@ -111,6 +111,9 @@ class Device:
     def sendLed(self, colors):
         self.sendToDevice(CommandCode.LED.value + " " + " ".join(colors))
 
+    def sendLedAnimation(self, animation, steps, delay):
+        self.sendToDevice(f"N {animation} {steps} {delay}")
+
     def requestInfo(self, timeout):
         with self.awaitingResponseLock:
             print("Requesting device info...")

@@ -353,6 +353,32 @@ void processRefreshCommand() {
   Serial.println("ok");
 }
 
+void processAnimateCommand() {
+  if (serialBufferCount < 5 || serialBuffer[1] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  byte i = 2;
+  int a = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  int s = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  int d = atoi(serialBuffer + i);
+  animateLeds(a, s, d);
+}
+
 //Read from Serial in and react to enter (carriage return)
 void handleSerialInput() { 
   if (Serial.available() > 0) {
@@ -380,6 +406,8 @@ void handleSerialInput() {
             //Serial.println("E: processLEDCommand()");
             processLEDCommand();
             break;
+          case 'N': //Animate LEDS
+            processAnimateCommand();
           case 'R': //Trigger refresh
             //Serial.println("E: processRefreshCommand()");
             processRefreshCommand();

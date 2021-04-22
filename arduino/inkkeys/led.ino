@@ -10,6 +10,8 @@ Adafruit_NeoPixel leds = Adafruit_NeoPixel(N_LED, PIN_LED, NEO_GRB + NEO_KHZ800)
 
 int steps;
 int stepsRemaining = 0;
+uint8_t stepDelay = 0;
+unsigned long lastUpdate = 0;
 int animation = 0;
 
 void initLEDs() {
@@ -40,13 +42,14 @@ uint32_t hue2rgb(int hue) {
   return r << 16 | g << 8 | b;
 }
 
-void animateLeds(int a, int s) {
+void animateLeds(int a, int s, int d) {
   // A new animation is called.
   if (a != animation) {
     leds.clear();
     leds.show();
     steps = s;
     stepsRemaining = s;
+    stepDelay = d;
     animation = a;
   } 
 
@@ -55,6 +58,7 @@ void animateLeds(int a, int s) {
       // Reset and turn animation off
       steps = 0;
       animation = 0;
+      stepDelay = 0;
       leds.clear();
       leds.show();
     } else {
@@ -63,6 +67,10 @@ void animateLeds(int a, int s) {
         case 1:
           ledGreeting();
           break;
+        case 2:
+          ledBlinkBlue();
+          break;
+       
       }
     } 
   }
@@ -78,12 +86,27 @@ void ledGreeting() {
     leds.setPixelColor(j, dimmedColor(hue2rgb(i/2 + j*256/N_LED), brightness));
   }
   leds.show();
-  stepsRemaining--;
+}
+
+// 2 - Blink the LED blue
+void ledBlinkBlue() {
+  int i = steps - stepsRemaining;
+  int brightness = constrain(steps/2 - abs(i-steps/2), 0, 255);
+  for (int j = 0; j < N_LED; j++) {
+    leds.setPixelColor(j, leds.Color(0, 0, 255));
+    leds.setBrightness(brightness);
+  }
+  leds.show();
 }
 
 // Process the next step of any animation in progress.
 void processAnimation() {
   if (animation > 0) {
-    animateLeds(animation, steps);
+    unsigned long now = millis();
+    if (now > lastUpdate+stepDelay) {
+      animateLeds(animation, steps, stepDelay);
+      lastUpdate = now;
+      stepsRemaining--;
+    }
   }
 }

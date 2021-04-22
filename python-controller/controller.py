@@ -74,6 +74,8 @@ def work():
                         if i["mode"] != mode:           # Do not set the mode again if we already have this one
                             if mode != None:            
                                 mode.deactivate(device) # If there was a previous mode, call its deactivate function
+                                device.sendLedAnimation(2, 50, 20)
+                                device.resetDisplay()
                             mode = i["mode"]            # Set new mode
                             mode.activate(device)       # ...and call its activate function
                             pollInterval = 0            # Reset the poll intervall to call mode.poll() at least once (see below)

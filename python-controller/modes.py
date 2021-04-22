@@ -101,7 +101,7 @@ class ModeGimp:
     jogFunction = ""    #Keeps track of the currently selected function of the jog dial
 
     def activate(self, device):
-        device.sendTextFor("title", "Gimp", inverted=True)  #Title
+        device.sendTextFor("title", "Gimp")  #Title
 
         #Button2 (top left)
         device.sendIconFor(2, "icons/fullscreen.png")
