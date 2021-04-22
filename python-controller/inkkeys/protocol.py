@@ -17,10 +17,12 @@ class CommandCode(Enum):
     LED = "L"
     REFRESH = "R"
     INFO = "I"
+    ANIMATE = "N"
 
 class RefreshTypeCode(Enum):
     PARTIAL = "p"
     FULL = "f"
+    RESET = "r"
     OFF = "o"
     
 class KeyCode(Enum):

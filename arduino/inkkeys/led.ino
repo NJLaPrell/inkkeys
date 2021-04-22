@@ -13,6 +13,9 @@ int stepsRemaining = 0;
 uint8_t stepDelay = 0;
 unsigned long lastUpdate = 0;
 int animation = 0;
+int brightness = 0;
+uint32_t color;
+int iteration = 0;
 
 void initLEDs() {
   leds.begin();
@@ -42,7 +45,7 @@ uint32_t hue2rgb(int hue) {
   return r << 16 | g << 8 | b;
 }
 
-void animateLeds(int a, int s, int d) {
+void animateLeds(int a, int s, int d, int br, uint32_t c, int i) {
   // A new animation is called.
   if (a != animation) {
     leds.clear();
@@ -51,9 +54,16 @@ void animateLeds(int a, int s, int d) {
     stepsRemaining = s;
     stepDelay = d;
     animation = a;
+    brightness = br;
+    color = c;
+    iteration = i;
   } 
 
   if (a == animation) {
+    if (stepsRemaining == 0 && iteration > 1) {
+      stepsRemaining = steps;
+      iteration--;
+    }
     if (stepsRemaining == 0) {
       // Reset and turn animation off
       steps = 0;
@@ -68,7 +78,7 @@ void animateLeds(int a, int s, int d) {
           ledGreeting();
           break;
         case 2:
-          ledBlinkBlue();
+          ledBlink();
           break;
        
       }
@@ -89,11 +99,11 @@ void ledGreeting() {
 }
 
 // 2 - Blink the LED blue
-void ledBlinkBlue() {
+void ledBlink() {
   int i = steps - stepsRemaining;
   int brightness = constrain(steps/2 - abs(i-steps/2), 0, 255);
   for (int j = 0; j < N_LED; j++) {
-    leds.setPixelColor(j, leds.Color(0, 0, 255));
+    leds.setPixelColor(j, color);
     leds.setBrightness(brightness);
   }
   leds.show();
@@ -104,7 +114,7 @@ void processAnimation() {
   if (animation > 0) {
     unsigned long now = millis();
     if (now > lastUpdate+stepDelay) {
-      animateLeds(animation, steps, stepDelay);
+      animateLeds(animation, steps, stepDelay, brightness, color, iteration);
       lastUpdate = now;
       stepsRemaining--;
     }

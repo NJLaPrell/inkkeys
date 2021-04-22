@@ -358,6 +358,10 @@ void processAnimateCommand() {
     Serial.println("E: Bad format.");
     return;
   }
+  byte b = 0;
+  byte r = 0;
+  byte g = 0;
+  byte br = 0;
   byte i = 2;
   int a = atoi(serialBuffer + i);
   while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
@@ -376,7 +380,51 @@ void processAnimateCommand() {
   }
   i++;
   int d = atoi(serialBuffer + i);
-  animateLeds(a, s, d);
+
+
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  br = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+  i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  r = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  g = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  b = atoi(serialBuffer + i);
+  while (i < serialBufferCount && serialBuffer[i] >= '0' && serialBuffer[i] <= '9')
+    i++;
+  if (i+1 >= serialBufferCount || serialBuffer[i] != ' ') {
+    Serial.println("E: Bad format.");
+    return;
+  }
+  i++;
+  i = atoi(serialBuffer + i);
+
+  uint32_t c = ((uint32_t)g << 16) | ((uint32_t)r <<  8) | b;
+  animateLeds(a, s, d, br, c, i);
 }
 
 //Read from Serial in and react to enter (carriage return)
@@ -434,7 +482,7 @@ void handleSerialInput() {
           expectingImageData--;
           if (serialBufferCount * 8 >= imageDataTargetWidth) {
             display.writeImage(serialBuffer, imageDataTargetX, imageDataCurrentY, imageDataTargetWidth, 1, false, false, false);
-            display.writeImageAgain(serialBuffer, imageDataTargetX, imageDataCurrentY, imageDataTargetWidth, 1, false, false, false);
+            //display.writeImageAgain(serialBuffer, imageDataTargetX, imageDataCurrentY, imageDataTargetWidth, 1, false, false, false);
             serialBufferCount = 0;
             imageDataCurrentY++;
             if (expectingImageData == 0) {

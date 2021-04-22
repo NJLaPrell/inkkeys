@@ -111,8 +111,8 @@ class Device:
     def sendLed(self, colors):
         self.sendToDevice(CommandCode.LED.value + " " + " ".join(colors))
 
-    def sendLedAnimation(self, animation, steps, delay):
-        self.sendToDevice(f"N {animation} {steps} {delay}")
+    def sendLedAnimation(self, animation, steps, delay=0, brightness=0, r=0, g=0, b=0, iteration=1):
+        self.sendToDevice(f"{CommandCode.ANIMATE.value} {animation} {steps} {delay} {brightness} {r} {g} {b} {iteration}")
 
     def requestInfo(self, timeout):
         with self.awaitingResponseLock:
@@ -186,7 +186,7 @@ class Device:
 
     # Blanks out the display
     def resetDisplay(self):
-        self.sendToDevice('R r')
+        self.sendToDevice(CommandCode.REFRESH.value + " " + RefreshTypeCode.RESET.value)
 
     # Render the images on the display
     def updateDisplay(self, fullRefresh=False, timeout=5, bufferData=False):
