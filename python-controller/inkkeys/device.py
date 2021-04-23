@@ -32,6 +32,8 @@ class Device:
 
     debug = True;
 
+    status = False
+
     def connect(self, dev):
         print("Connecting to ", dev, ".")
         self.ser = serial.Serial(dev, 115200, timeout=1, write_timeout=5)
@@ -316,4 +318,9 @@ class Device:
         dimmedLeds = [(int((i & 0xff0000) * p) & 0xff0000) | (int((i & 0xff00) * p) & 0xff00) | (int((i & 0xff) * p) & 0xff) for i in self.ledState]
         ledStr = ['{:06x}'.format(i) for i in dimmedLeds]
         self.sendLed(ledStr)
+    
+    def setStatus(self, status):
+        self.status = status
+        if self.debug:
+            print("Setting device status to " + status)
 

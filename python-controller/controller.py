@@ -2,6 +2,7 @@ SERIALPORT = None #None = Auto-detect, to specify a specific serial port, you ca
 VID = 0x1B4F      #USB Vendor ID for a Pro Micro
 PID = 0x9206    #USB Product ID for a Pro Micro
 DEBUG = True     #More output on the command line
+HTTP_PORT = 8080
 
 from inkkeys import *        #Inkkeys module
 from processchecks import *  #Functions to check for active processes and windows
@@ -14,8 +15,47 @@ import re                           #Regular expressions process name matching
 import traceback                    #Print tracebacks if an error is thrown and caught
 import socket                       #Get the hostname of the computer
 
+import json
+import threading                    #Run an http server in a separate thread.
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from json import JSONDecodeError
+
 print("https://there.oughta.be/a/macro-keyboard")
 print('I will try to stay connected. Press Ctrl+c to quit.')
+
+class HttpHandler(BaseHTTPRequestHandler):  
+    def do_POST(self):
+        content_length = int(self.headers["Content-Length"])
+        post_data = self.rfile.read(content_length)
+        if DEBUG:
+            print(f"POST - {content_length} bytes received.")
+        try:
+            payload = json.loads(str(post_data, "utf-8"))
+            if "status" in payload:
+                device.setStatus(payload["status"])
+
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+        except JSONDecodeError as jde:
+            print(jde)
+            print(post_data)
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+
+def listenToHttp():
+    print(f'Listening for http traffic on port {HTTP_PORT}')
+    try:
+        httpd = HTTPServer(("0.0.0.0", HTTP_PORT), HttpHandler)
+        httpd.serve_forever()
+    except OSError:
+        print(f"Cannot bind http server on adress {HTTP_PORT}")
+
+httpThread = threading.Thread(target=listenToHttp, daemon=True)
+httpThread.start()
+
+
 
 ############################################################################################################
 
@@ -31,7 +71,7 @@ print('I will try to stay connected. Press Ctrl+c to quit.')
 modes = [\
             {"mode": ModeBlender(), "activeWindow": re.compile("^Blender")}, \
             {"mode": ModeGimp(), "activeWindow": re.compile("^GIMP.*")}, \
-            {"mode": ModeMiniFallback(), "hostname":"Mac-Mini.local"}, \
+            {"mode": ModeMiniFallback(), "hostname":"Mac-Mini"}, \
             {"mode": ModeFallback()} \
         ]
 
@@ -110,7 +150,6 @@ def tryUsingPort(port):
     try:
         if device.connect(port):
             print(f"Connected to controller on {socket.gethostname()}")
-            device.resetDisplay()
             device.resetDisplay()
             work()  #Success, enter main loop
             device.disconnect()
