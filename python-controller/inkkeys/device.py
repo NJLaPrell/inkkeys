@@ -61,7 +61,6 @@ class Device:
             print("Sending " + str(len(data)) + " bytes of binary data.")
         try:
             # Send binary data in chunks to prevent killing the serial connection
-            start = time.time()
             endIx = CHUNK_SIZE
             startIx = 0
             while (startIx < len(data)):

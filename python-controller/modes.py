@@ -15,7 +15,6 @@
 from inkkeys import *
 import time
 from threading import Timer
-from math import ceil, floor
 from PIL import Image, ImageDraw, ImageFont
 from colorsys import hsv_to_rgb
 
@@ -196,7 +195,7 @@ class ModeFallback:
         device.assignKey(KeyCode.SW3_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_2, ActionCode.RELEASE)])
         
         ### Button 4 ###
-        device.sendIconFor(4, "icons/app-snippets.png", centered=False)
+        device.sendIconFor(4, "icons/app-postman.png", centered=False)
         device.assignKey(KeyCode.SW4_PRESS, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.PRESS), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_3, ActionCode.PRESS)])
         device.assignKey(KeyCode.SW4_RELEASE, [event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_CTRL, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_LEFT_WINDOWS, ActionCode.RELEASE), event(DeviceCode.KEYBOARD, KeyboardKeycode.KEY_3, ActionCode.RELEASE)])
         
@@ -228,9 +227,6 @@ class ModeFallback:
 
         device.updateDisplay()
 
-    def poll(self, device):
-        return False    #No polling required
-
     #Called to update the icon of button 4, showing the state of the office light (as if I couldn't see it in the real room, but it is a nice touch to update the display accordingly)
     def showLightState(self, device, update=True):
         if self.lightState:
@@ -250,9 +246,6 @@ class ModeFallback:
             device.setLeds(leds)
         else:               #If not in demo mode, we call "fadeLeds" to create a fade animation for any color set anywhere in this mode
             device.fadeLeds()
-
-    def deactivate(self, device):
-        device.clearCallbacks() #Clear our callbacks if we switch to a different mode
 
     def poll(self, device):
         return False    #No polling required
@@ -329,11 +322,9 @@ class ModeMiniFallback:
             device.sendLedAnimation(2, 50, 20, g=255, iteration=2)
         if device.status == "Working":
             device.sendLedAnimation(2, 50, 20, r=0, g=156, b=247, iteration=10)
-        device.setStatus("")
+        if device.status:
+            device.setStatus("")
         return 1    
-
-    def deactivate(self, device):
-        device.clearCallbacks() #Clear our callbacks if we switch to a different mode
 
     def animate(self, device):
         pass    #In this mode we want permanent LED illumination. Do not fade or animate otherwise.

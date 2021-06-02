@@ -71,7 +71,7 @@ httpThread.start()
 modes = [\
             {"mode": ModeBlender(), "activeWindow": re.compile("^Blender")}, \
             {"mode": ModeGimp(), "activeWindow": re.compile("^GIMP.*")}, \
-            {"mode": ModeMiniFallback(), "hostname":"Mac-Mini"}, \
+            {"mode": ModeMiniFallback(), "hostname": re.compile("^Mac-Min.*")}, \
             {"mode": ModeFallback()} \
         ]
 
@@ -92,6 +92,7 @@ def work():
     lastPoll = 0            #Keeps track of the last time the poll function of the mode instance was called
     lastProcessList = 0     #Keeps track of the last time the list of processes was retrieved
     lastModeCheck = 0       #Keeps track of the last time the current window was checked and a decision about the mode was made
+    activeWindow = None
     
     try:
         while True:     #Now we are in our main, infinite loop -------------------
@@ -104,12 +105,12 @@ def work():
             if now - lastModeCheck > 0.5:       # Check active window and decide which mode to use. This can be done more regularly, but since the e-ink screen takes a moment to update, it does not make sense to check more frequently
                 window = getActiveWindow()      # Get the currently active window
                 if window != None:              # Sometime getting the active window fails, then ignore it. (Some window managers allow having no window in focus)
+                    if DEBUG and activeWindow != window:                   #Enable DEBUG to see the actual name of the current window if you need it to match your modules
+                        print("Active window: " + str(window))
                     activeWindow = window
-                    if DEBUG:                   #Enable DEBUG to see the actual name of the current window if you need it to match your modules
-                        print("Active window: " + str(activeWindow))
 
                 for i in modes:                 #Iterate over modes and use the first one that matches
-                    if ("process" in i and i["process"] in processes) or ("hostname" in i and i["hostname"] == hostname) or ("activeWindow" in i and i["activeWindow"].match(activeWindow)) or not ("process" in i or "activeWindow" in i or "hostname" in i):
+                    if ("process" in i and i["process"] in processes) or ("hostname" in i and i["hostname"].match(hostname)) or ("activeWindow" in i and i["activeWindow"].match(activeWindow)) or not ("process" in i or "activeWindow" in i or "hostname" in i):
                         #Either the process for this mode is running or the active window matches the regular expression. This is the mode we will set now.
                         if i["mode"] != mode:           # Do not set the mode again if we already have this one
                             if mode != None:            
