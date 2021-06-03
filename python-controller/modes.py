@@ -256,6 +256,19 @@ class ModeFallback:
     def deactivate(self, device):
         device.clearCallbacks() #Clear our callbacks if we switch to a different mode
 
+    def poll(self, device):
+        if device.status == "Error":
+            device.sendLedAnimation(2, 50, 20, r=255, iteration=10)
+        if device.status == "Warning":
+            device.sendLedAnimation(2, 50, 20, r=247, g=160, b=0, iteration=10)
+        if device.status == "Done":
+            device.sendLedAnimation(2, 50, 20, g=255, iteration=2)
+        if device.status == "Working":
+            device.sendLedAnimation(2, 50, 20, r=0, g=156, b=247, iteration=10)
+        if device.status:
+            device.setStatus("")
+        return 1 
+
 class ModeMiniFallback:
 
     def activate(self, device):
